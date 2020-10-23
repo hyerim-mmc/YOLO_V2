@@ -1,25 +1,32 @@
 import os
-import tarfile
 import wget
+import tarfile
 
-def PASCAL_VOC_2012_LOAD():
-    URL = 'http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar'
-    PATH = './PASCAL_VOC_2012'
 
-    if not os.path.exists(PATH):
-        os.mkdir(PATH)
-        wget.download(URL,PATH)
+def load_PASCAL_VOC2012():
+    url = 'http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar'
+    filename = 'VOCtrainval_11-May-2012.tar'
+    data_dir = './PASCAL_VOC_2012'
+
+    if not os.path.exists(data_dir):
+        os.mkdir(data_dir)
+        wget.download(url, data_dir)
     else:
-        wget.download(URL,PATH)
+        if filename in os.listdir(data_dir):
+            pass
+        else:
+            wget.download(url, data_dir)
+    if filename not in os.listdir(data_dir):
+        raise RuntimeError('Tarfile is not found')
 
-    os.listdir()
-    untar = tarfile.TarFile(file_untar)
-    untar.extractall()
-    untar.close()
-
-    print("Download finish!")
+    if 'VOCdevkit' in os.listdir(data_dir):
+        print("Dataset already exists")
+    else:
+        with tarfile.open(os.path.join(data_dir, filename), 'r') as untar:
+            print("Start extracting tarfile")
+            untar.extractall(data_dir)
+            print("PASCAL_VOC2012 is downloaded")
 
 
 if __name__ == '__main__':
-    PASCAL_VOC_2012_LOAD()
-
+    load_PASCAL_VOC2012()
