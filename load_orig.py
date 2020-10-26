@@ -1,7 +1,7 @@
 import os
-import matplotlib.pyplot as plt
+import numpy as np
 import xml.etree.ElementTree as Et
-
+import torch.utils.data.dataloader
 from PIL import Image
 from PIL import ImageDraw
 
@@ -41,8 +41,4 @@ for xml_file in annot_files:
         draw.rectangle(((xmin,ymin), (xmax,ymax)), outline = "red")
         draw.text((xmin,ymin), name)
 
-    plt.figure()
-    plt.imshow(img)
-    plt.show()
-    plt.close()
-
+    img.show()
