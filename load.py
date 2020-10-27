@@ -1,16 +1,28 @@
 import os
 import random
 import numpy as np
+import utils
+
 import xml.etree.ElementTree as Et
 import torch.utils.data.dataset
 import torch.utils.data.dataloader
-import utils
 
+from PIL import Image
 
 
 class Resize:
-    def __int__(self):
-        pass
+    def __int__(self, output_size):
+        assert isinstance(output_size, int)
+        self.output_size = output_size
+
+    def __call__(self, sample):
+        image_path, annotation = sample["image"], sample["annotation"]
+        image = Image.open(image_path).convert('RGB')
+        height, width = np.shape(image)
+
+
+
+        return
 
 
 class RandomCrop:
@@ -24,13 +36,14 @@ class VOC_DataLoad(torch.utils.data.Dataset):
         self.transform = transform
         self.train = train
 
+        train_files = np.loadtxt(os.path.join(base_dir, 'ImageSets/Main/train.txt'), delimiter='\n', dtype='str')
+        val_files = np.loadtxt(os.path.join(base_dir, 'ImageSets/Main/val.txt'), delimiter='\n', dtype='str')
+        self.data_files = np.concatenate((train_files, val_files))
+
         if os.path.exists('train.npy') & os.path.exists('val.npy'):
             pass
-        else:
-            train_files = np.loadtxt(os.path.join(base_dir, 'ImageSets/Main/train.txt'), delimiter='\n', dtype='str')
-            val_files = np.loadtxt(os.path.join(base_dir, 'ImageSets/Main/val.txt'), delimiter='\n', dtype='str')
-            self.data_files = np.concatenate((train_files, val_files))
 
+        else:
             random.shuffle(self.data_files)
             split = int(np.round(0.1 * len(self.data_files)))
             train_files, val_files = self.data_files[split:], self.data_files[:split]
@@ -71,8 +84,8 @@ class VOC_DataLoad(torch.utils.data.Dataset):
         else:
             file_name = np.load('val.npy')[idx]
 
-        img_file = os.path.join(self.base_dir, img_folder, file_name + ".jpg")
-        xml = open(os.path.join(self.base_dir, annot_folder, file_name + ".xml"), "r")
+        img_file = os.path.join(self.base_dir, img_folder, "{0}.jpg".format(file_name))
+        xml = open(os.path.join(self.base_dir, annot_folder, "{0}.xml".format(file_name)), "r")
         tree = Et.parse(xml)
         root = tree.getroot()
 
@@ -113,10 +126,14 @@ class VOC_DataLoad(torch.utils.data.Dataset):
             "objects": obj
         }
 
-        #print({'image': img_file, 'annotation': annotation})
-        return {'image': img_file, 'annotation': annotation}
+        if self.transform:
+            pass
+
+        sample = {'image': img_file, 'annotation': annotation}
+        return sample
 
 
 if __name__ == '__main__':
-    x= VOC_DataLoad()
-    utils.show_image(x.__getitem__(3)['image'], x.__getitem__(3)['annotation'])
+    VOC_dataset = VOC_DataLoad()
+    for idx in range(VOC_dataset.__len__()):
+        utils.show_image(VOC_dataset.__getitem__(idx)["image"], VOC_dataset.__getitem__(idx)["annotation"])
