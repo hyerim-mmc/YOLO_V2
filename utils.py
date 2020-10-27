@@ -2,8 +2,8 @@ from PIL import Image
 from PIL import ImageDraw
 
 def show_image(img_file,annotation):
-    img = Image.open(img_file).convert('RGB')
-    draw = ImageDraw.Draw(img)
+    # img = Image.open(img_file).convert('RGB')
+    draw = ImageDraw.Draw(img_file)
 
     for idx in range(0, int(annotation["objects"]["num_obj"])):
         name = annotation["objects"][str(idx)]["name"]
@@ -15,4 +15,4 @@ def show_image(img_file,annotation):
         draw.rectangle(((xmin, ymin), (xmax, ymax)), outline="red")
         draw.text((xmin, ymin), name)
 
-    img.show()
+    img_file.show()
