@@ -1,5 +1,4 @@
 pillow
 matplotlib
 wget
-torch
-numpy
+numpy==1.16.0

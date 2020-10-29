@@ -1,33 +1,16 @@
 from PIL import Image
 from PIL import ImageDraw
 
-# input : file path
-def show_image(img_file, annotation):
-    img = Image.open(img_file).convert('RGB')
-    draw = ImageDraw.Draw(img)
-
-    for idx in range(0, int(annotation["objects"]["num_obj"])):
-        name = annotation["objects"][str(idx)]["name"]
-        xmin = annotation["objects"][str(idx)]["bndbox"]["xmin"]
-        ymin = annotation["objects"][str(idx)]["bndbox"]["ymin"]
-        xmax = annotation["objects"][str(idx)]["bndbox"]["xmax"]
-        ymax = annotation["objects"][str(idx)]["bndbox"]["ymax"]
-
-        draw.rectangle(((xmin, ymin), (xmax, ymax)), outline="red")
-        draw.text((xmin, ymin), name)
-
-    img.show()
-
-# input : raw image
-def show_image_raw(img_file, annotation):
+def show_image_raw(data):
+    img_file, annotation = data["image"], data["annotation"]
     draw = ImageDraw.Draw(img_file)
 
-    for idx in range(0, int(annotation["objects"]["num_obj"])):
-        name = annotation["objects"][str(idx)]["name"]
-        xmin = annotation["objects"][str(idx)]["bndbox"]["xmin"]
-        ymin = annotation["objects"][str(idx)]["bndbox"]["ymin"]
-        xmax = annotation["objects"][str(idx)]["bndbox"]["xmax"]
-        ymax = annotation["objects"][str(idx)]["bndbox"]["ymax"]
+    for idx in range(len(annotation)):
+        name = annotation[idx][0]
+        xmin = annotation[idx][1]
+        ymin = annotation[idx][2]
+        xmax = annotation[idx][3]
+        ymax = annotation[idx][4]
 
         draw.rectangle(((xmin, ymin), (xmax, ymax)), outline="red")
         draw.text((xmin, ymin), name)
