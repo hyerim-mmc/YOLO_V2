@@ -8,7 +8,7 @@ import torch.utils.data.dataloader
 
 from torchvision import transforms
 from PIL import Image
-
+from torchvision.transforms import fun
 
 class Resize:
     def __init__(self, output_size):
@@ -54,10 +54,10 @@ class RandomCrop:
         max_hpoint = random.randint(0, height - self.output_size)
 
         area = (max_wpoint, self.output_size, max_hpoint, self.output_size)
-        crop_img = image.crop(area)
+        crop_image = image.crop(area)
 
-        #annotation
-        return {'image' : crop_img, 'annotation' : annotation}
+        #annotatio
+        return {'image' : crop_image, 'annotation' : annotation}
 
 
 
@@ -65,9 +65,8 @@ class RandomCrop:
 class VOC_DataLoad(torch.utils.data.Dataset):
     def __init__(self, base_dir='./PASCAL_VOC_2012/VOCdevkit/VOC2012', train=True, transform=None):
         self.base_dir = base_dir
-        self.transform = transforms.Compose([
-                transforms.ToTensor()
-                ])
+        self.transform = transform
+            # transforms.Compose([ transforms.ToTensor() ])
         self.train = train
 
         train_files = np.loadtxt(os.path.join(base_dir, 'ImageSets/Main/train.txt'), delimiter='\n', dtype='str')
@@ -162,23 +161,23 @@ class VOC_DataLoad(torch.utils.data.Dataset):
 
         sample = {'image': img_file, 'annotation': annotation}
 
-        # if self.transform:
-        #     resize = Resize(416)
-        #     new_sample = resize(sample)
-        #     randomcrop = RandomCrop(416)
-        #     new_sample = randomcrop(new_sample)
-        #
-        #     img_file = self.transform(img_file)
-        #     annotation = self.transform(annotation)
 
-        return sample
+        if self.transform:
+            resize = Resize(416)
+            new_sample = resize(sample)
+            randomcrop = RandomCrop(416)
+            #new_sample = randomcrop(new_sample)
+
+        return new_sample
 
 
 if __name__ == '__main__':
     VOC_dataset = VOC_DataLoad(transform=True)
 
     for idx in range(VOC_dataset.__len__()):
-        utils.show_image(VOC_dataset.__getitem__(idx)["image"], VOC_dataset.__getitem__(idx)["annotation"])
+    #for idx in range(5700):
+        # utils.show_image(VOC_dataset.__getitem__(idx)["image"], VOC_dataset.__getitem__(idx)["annotation"])
+        utils.show_image_raw(VOC_dataset.__getitem__(idx)["image"], VOC_dataset.__getitem__(idx)["annotation"])
     # utils.show_image(VOC_dataset.__getitem__(1)["image"], VOC_dataset.__getitem__(1)["annotation"])
 
 
