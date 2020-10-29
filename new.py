@@ -4,7 +4,6 @@ import numpy as np
 import utils
 import xml.etree.ElementTree as Et
 import torch.utils.data.dataset
-import torch.utils.data.dataloader
 import torchvision.transforms.functional as TF
 
 from torchvision import transforms
@@ -61,6 +60,12 @@ class RandomCrop:
             bbox[idx][1] -= rand_h
             bbox[idx][2] -= rand_w
             bbox[idx][3] -= rand_h
+
+            if (bbox[idx][0] < 0) and (bbox[idx][1] < 0) and (bbox[idx][2] < 0) and (bbox[idx][3] < 0):
+                check = False
+                del bbox[idx]
+
+
 
         return {"image": crop_image, "annotation": bbox}
 
@@ -140,12 +145,8 @@ class VOC_DataLoad(torch.utils.data.Dataset):
         sample = {"image": img_file, "annotation": annotation}
 
         if self.transform:
-            resize = Resize(416, scale_factor=1.15)
-            new_sample = resize(sample)
-            randomcrop = RandomCrop(416)
-            new_sample = randomcrop(new_sample)
-            transforms.ToTensor()
-        return new_sample
+            sample = self.transform(sample)
+        return sample
 
 
 if __name__ == "__main__":
@@ -153,11 +154,7 @@ if __name__ == "__main__":
         train=True,
         transform=transforms.Compose([Resize(416, scale_factor=1.15), RandomCrop(416), ToTensor()]),
     )
-    # VOC_dataset = VOC_DataLoad(
-    #     train=True,
-    #     transform=transforms.Compose([Resize(416)]),
-    # )
 
     for idx in range(VOC_dataset.__len__()):
         utils.show_image(VOC_dataset.__getitem__(idx))
-        print(VOC_dataset.__getitem__(idx))
+        #print(VOC_dataset.__getitem__(idx))

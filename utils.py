@@ -1,6 +1,7 @@
 from PIL import Image
 from PIL import ImageDraw
 from torchvision import transforms
+import numpy as np
 
 
 def show_image_raw(data):
@@ -22,6 +23,8 @@ def show_image_raw(data):
 
 def show_image(data):
     img_file, annotation = data["image"], data["annotation"]
+    img_file = transforms.ToPILImage()(img_file)
+    annotation = annotation.tolist()
     draw = ImageDraw.Draw(img_file)
 
     for idx in range(len(annotation)):
