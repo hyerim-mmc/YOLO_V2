@@ -33,10 +33,10 @@ class Resize:
         new_image = TF.resize(image, (new_h, new_w), Image.BILINEAR)
 
         for idx in range(len(bbox)):
-            bbox[idx][1] *= new_w / width
-            bbox[idx][2] *= new_h / height
-            bbox[idx][3] *= new_w / width
-            bbox[idx][4] *= new_h / height
+            bbox[idx][0] *= new_w / width
+            bbox[idx][1] *= new_h / height
+            bbox[idx][2] *= new_w / width
+            bbox[idx][3] *= new_h / height
 
         return {"image": new_image, "annotation": bbox}
 
@@ -57,18 +57,21 @@ class RandomCrop:
         for idx in range(len(bbox)):
             check = True
 
-            bbox[idx][1] -= rand_w
-            bbox[idx][2] -= rand_h
-            bbox[idx][3] -= rand_w
-            bbox[idx][4] -= rand_h
-
-            # for i in range(1, 5):
-            #     if bbox[idx][i] < 0:
-            #         check = False
-            # if not check:
-            #     del bbox[idx]
+            bbox[idx][0] -= rand_w
+            bbox[idx][1] -= rand_h
+            bbox[idx][2] -= rand_w
+            bbox[idx][3] -= rand_h
 
         return {"image": crop_image, "annotation": bbox}
+
+
+class ToTensor:
+    def __call__(self, sample):
+        image, bbox = sample["image"], sample["annotation"]
+        image = np.array(image)
+        image = np.transpose(image, (2, 0, 1))
+        bbox = np.array(bbox)
+        return {"image": torch.from_numpy(image), "annotation": torch.from_numpy(bbox)}
 
 
 class VOC_DataLoad(torch.utils.data.Dataset):
@@ -102,8 +105,7 @@ class VOC_DataLoad(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         """
-        :return: { 'image' : img_file,
-                   'annotation' :  [[name, xmin, ymin, xmax, ymax], [...]] - [<string>,<float>]
+        :return: { 'image' : img_file, 'annotation' :  [[xmin, ymin, xmax, ymax], [...]]
                 }
         """
 
@@ -126,8 +128,6 @@ class VOC_DataLoad(torch.utils.data.Dataset):
         obj_idx = 0
         for _object in objects:
             tmp = []
-            tmp.append(_object.find("name").text)
-
             xml_bndbox = _object.find("bndbox")
             tmp.append(float(xml_bndbox.find("xmin").text))
             tmp.append(float(xml_bndbox.find("ymin").text))
@@ -144,14 +144,20 @@ class VOC_DataLoad(torch.utils.data.Dataset):
             new_sample = resize(sample)
             randomcrop = RandomCrop(416)
             new_sample = randomcrop(new_sample)
+            transforms.ToTensor()
         return new_sample
 
 
 if __name__ == "__main__":
     VOC_dataset = VOC_DataLoad(
         train=True,
-        transform=transforms.Compose([Resize(416), RandomCrop(416), transforms.ToTensor()]),
+        transform=transforms.Compose([Resize(416, scale_factor=1.15), RandomCrop(416), ToTensor()]),
     )
+    # VOC_dataset = VOC_DataLoad(
+    #     train=True,
+    #     transform=transforms.Compose([Resize(416)]),
+    # )
 
     for idx in range(VOC_dataset.__len__()):
-        utils.show_image_raw(VOC_dataset.__getitem__(idx))
+        utils.show_image(VOC_dataset.__getitem__(idx))
+        print(VOC_dataset.__getitem__(idx))

@@ -1,5 +1,7 @@
 from PIL import Image
 from PIL import ImageDraw
+from torchvision import transforms
+
 
 def show_image_raw(data):
     img_file, annotation = data["image"], data["annotation"]
@@ -14,5 +16,21 @@ def show_image_raw(data):
 
         draw.rectangle(((xmin, ymin), (xmax, ymax)), outline="red")
         draw.text((xmin, ymin), name)
+
+    img_file.show()
+
+
+def show_image(data):
+    img_file, annotation = data["image"], data["annotation"]
+    draw = ImageDraw.Draw(img_file)
+
+    for idx in range(len(annotation)):
+        xmin = annotation[idx][0]
+        ymin = annotation[idx][1]
+        xmax = annotation[idx][2]
+        ymax = annotation[idx][3]
+
+        draw.rectangle(((xmin, ymin), (xmax, ymax)), outline="red")
+        # draw.text((xmin, ymin), name)
 
     img_file.show()
