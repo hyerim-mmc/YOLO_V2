@@ -32,10 +32,11 @@ class Resize:
         new_image = TF.resize(image, (new_h, new_w), Image.BILINEAR)
 
         for idx in range(len(bbox)):
-            bbox[idx][0] *= new_w / width
-            bbox[idx][1] *= new_h / height
-            bbox[idx][2] *= new_w / width
-            bbox[idx][3] *= new_h / height
+            _bbox = bbox[idx]
+            _bbox[0] *= new_w / width
+            _bbox[1] *= new_h / height
+            _bbox[2] *= new_w / width
+            _bbox[3] *= new_h / height
 
         return {"image": new_image, "annotation": bbox}
 
@@ -52,21 +53,53 @@ class RandomCrop:
         rand_h = random.randint(0, height - self.output_size)
 
         crop_image = TF.crop(image, rand_h, rand_w, self.output_size, self.output_size)
+        check = []
+        temp = False
+        for idx in range(len(bbox)):
+            _bbox = bbox[idx]
+
+            _bbox[0] -= rand_w
+            _bbox[1] -= rand_h
+            _bbox[2] -= rand_w
+            _bbox[3] -= rand_h
+
+            # if (
+            #     (_bbox[0] < 0)
+            #     and (_bbox[0] > self.output_size)
+            #     and (_bbox[1] < 0)
+            #     and (_bbox[1] > self.output_size)
+            #     and (_bbox[2] < 0)
+            #     and (_bbox[2] > self.output_size)
+            #     and (_bbox[3] < 0)
+            #     and (_bbox[3] > self.output_size)
+            # ):
+            #     del _bbox
+            min_v = [_bbox[0], _bbox[1]]
+            max_v = [_bbox[2], _bbox[3]]
+
+            for i, v in enumerate(min_v):
+                if v < 0 and v > self.output_size:
+                    temp = True
+                else:
+                    temp = False
+
+            for i, v in enumerate(max_v):
+                if v < 0 and v > self.output_size:
+                    temp = True
+                else:
+                    temp = False
+
+            if temp:
+                print("#%d bbox can't be bbox" % idx)
+                check.append(0)
+            else:
+                check.append(1)
 
         for idx in range(len(bbox)):
-            check = True
+            if check[idx] == 0:
+                del _bbox[idx]
 
-            bbox[idx][0] -= rand_w
-            bbox[idx][1] -= rand_h
-            bbox[idx][2] -= rand_w
-            bbox[idx][3] -= rand_h
-
-            if (bbox[idx][0] < 0) and (bbox[idx][1] < 0) and (bbox[idx][2] < 0) and (bbox[idx][3] < 0):
-                check = False
-                del bbox[idx]
-
-
-
+        print("# of bbox : %d\n" % len(bbox))
         return {"image": crop_image, "annotation": bbox}
 
 
@@ -154,7 +187,9 @@ if __name__ == "__main__":
         train=True,
         transform=transforms.Compose([Resize(416, scale_factor=1.15), RandomCrop(416), ToTensor()]),
     )
+    # utils.show_image(VOC_dataset.__getitem__(4))
 
     for idx in range(VOC_dataset.__len__()):
+        print("#%d image" % idx)
         utils.show_image(VOC_dataset.__getitem__(idx))
-        #print(VOC_dataset.__getitem__(idx))
+    # print(VOC_dataset.__getitem__(idx))

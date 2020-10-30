@@ -33,7 +33,7 @@ def show_image(data):
         xmax = annotation[idx][2]
         ymax = annotation[idx][3]
 
-        draw.rectangle(((xmin, ymin), (xmax, ymax)), outline="red")
+        draw.rectangle(((xmin, ymin), (xmax, ymax)), outline="red", width=2)
         # draw.text((xmin, ymin), name)
 
     img_file.show()
