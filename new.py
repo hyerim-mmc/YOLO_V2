@@ -63,17 +63,6 @@ class RandomCrop:
             _bbox[2] -= rand_w
             _bbox[3] -= rand_h
 
-            # if (
-            #     (_bbox[0] < 0)
-            #     and (_bbox[0] > self.output_size)
-            #     and (_bbox[1] < 0)
-            #     and (_bbox[1] > self.output_size)
-            #     and (_bbox[2] < 0)
-            #     and (_bbox[2] > self.output_size)
-            #     and (_bbox[3] < 0)
-            #     and (_bbox[3] > self.output_size)
-            # ):
-            #     del _bbox
             min_v = [_bbox[0], _bbox[1]]
             max_v = [_bbox[2], _bbox[3]]
 
