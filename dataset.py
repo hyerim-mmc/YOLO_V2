@@ -9,6 +9,47 @@ import torchvision.transforms.functional as TF
 
 from torchvision import transforms
 from PIL import Image
+from PIL import ImageDraw
+
+category = [
+    "aeroplane",
+    "bicycle",
+    "bird",
+    "boat",
+    "bottle",
+    "bus",
+    "car",
+    "cat",
+    "chair",
+    "cow",
+    "diningtable",
+    "dog",
+    "horse",
+    "motorbike",
+    "person",
+    "pottedplant",
+    "sheep",
+    "sofa",
+    "train",
+    "tvmonitor",
+]
+
+
+def show_image(data):
+    image, annotation = data["image"], data["annotation"]
+
+    if torch.is_tensor(image):
+        image = transforms.ToPILImage()(image)
+
+    draw = ImageDraw.Draw(image)
+    bboxes = annotation["bbox"]
+    for i, bbox in enumerate(bboxes):
+        name = annotation["label"][i].item()
+        name_string = category[name]
+        draw.rectangle(((bbox[0], bbox[1]), (bbox[2], bbox[3])), outline="red", width=2)
+        draw.text((bbox[0], bbox[1]), name_string, fill=(255, 0, 0))
+
+    image.show()
 
 
 class Resize:
@@ -82,7 +123,7 @@ class RandomCrop:
         annotation["bbox"] = bboxes[check]
         annotation["label"] = annotation["label"][check]
 
-        print("# of bbox : %d\n" % len(annotation["bbox"]))
+        # print("# of bbox : %d\n" % len(annotation["bbox"]))
 
         return (crop_image, annotation)
 
@@ -150,28 +191,20 @@ class VOC_DataLoad(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         """
-        :return: { 'image' : image, 
-                   'annotation' : {
-                                'label' : [label_index]
-                                'bbox' : [[xmin, ymin, xmax, ymax], [...]]
+        :return: { "image" : image,
+                   "annotation" : {
+                                "label" : [label_index]
+                                "bbox" : [[xmin, ymin, xmax, ymax], [...]]
                                 }
                 }
         """
         if self.train:
-            self.image_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/JPEGImages/" + "{0}.jpg".format(
-                self.train_set[idx]
-            )
-            self.xml_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/Annotations/" + "{0}.xml".format(
-                self.train_set[idx]
-            )
+            self.image_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/JPEGImages/" + "{0}.jpg".format(self.train_set[idx])
+            self.xml_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/Annotations/" + "{0}.xml".format(self.train_set[idx])
 
         else:
-            self.image_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/JPEGImages/" + "{0}.jpg".format(
-                self.test_set[idx]
-            )
-            self.xml_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/Annotations/" + "{0}.xml".format(
-                self.test_set[idx]
-            )
+            self.image_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/JPEGImages/" + "{0}.jpg".format(self.test_set[idx])
+            self.xml_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/Annotations/" + "{0}.xml".format(self.test_set[idx])
 
         img_name = self.image_path
         xml_name = self.xml_path
@@ -199,7 +232,7 @@ class VOC_DataLoad(torch.utils.data.Dataset):
 
             bboxes.append([xmin, ymin, xmax, ymax])
 
-        annotation["label"] = torch.tensor(labels).float()
+        annotation["label"] = torch.tensor(labels).long()
         annotation["bbox"] = torch.tensor(bboxes).float()
 
         if self.train:
@@ -215,10 +248,98 @@ class VOC_DataLoad(torch.utils.data.Dataset):
         return {"image": image, "annotation": annotation}
 
 
-if __name__ == "__main__":
-    VOC_dataset = VOC_DataLoad()
+class anchor_box:
+    def __init__(self, k=5, path="./dataset/train.npy"):
+        self.k = k
+        box = []
+        data_set = np.load(path)
+        xml_set = {
+            "./Pascal_VOC_2012/VOCdevkit/VOC2012/Annotations/" + "{0}.xml".format(data_set[i])
+            for i in range(len(data_set))
+        }
 
-    for idx in range(VOC_dataset.__len__()):
-        print("#%d image" % idx)
-        utils.show_image(VOC_dataset.__getitem__(idx))
-    # print(VOC_dataset.__getitem__(idx))
+        for xml_path in xml_set:
+            xml = open(xml_path, "r")
+            tree = Et.parse(xml)
+            root = tree.getroot()
+            size = root.find("size")
+            width = float(size.find("width").text)
+            height = float(size.find("height").text)
+
+            objects = root.findall("object")
+            for _object in objects:
+                bndbox = _object.find("bndbox")
+                xmin = float(bndbox.find("xmin").text)
+                ymin = float(bndbox.find("ymin").text)
+                xmax = float(bndbox.find("xmax").text)
+                ymax = float(bndbox.find("ymax").text)
+                box.append([(xmax - xmin) / width, (ymax - ymin) / height])
+                # box.append([xmax - xmin, ymax - ymin])
+
+        self.box = box
+        self.box = np.array(box, dtype=np.float32)
+        self.centroid = np.array(random.sample(list(self.box), k))
+        self.cluster = np.empty(len(self.box))
+
+    def cal_dist(self, box):
+        w_min = np.minimum(box[0], self.centroid[:, 0])
+        h_min = np.minimum(box[1], self.centroid[:, 1])
+
+        overlap = w_min * h_min
+        dist = 1 - (overlap / (box[0] * box[1] + self.centroid[:, 0] * self.centroid[:, 1] - overlap))
+        idx = np.argmin(dist)
+
+        return idx
+
+    def assign_cluster(self):
+        for i, box in enumerate(self.box):
+            idx = self.cal_dist(box)
+            self.cluster[i] = idx
+
+    def update_centroid(self):
+        for i in range(self.k):
+            idx = self.cluster == i
+            kth_boxes = self.box[idx]
+            next_centroid = np.mean(kth_boxes, axis=0)
+            self.centroid[i, :] = next_centroid
+
+    def save_anchor(self):
+        anchor = self.centroid.copy()
+        area = anchor[:, 0] * anchor[:, 1]
+        # anchor = anchor(np.argsort(area))
+
+        np.save("./dataset/anchor.npy", anchor)
+        print("anchor.npy saved!")
+
+    def kmeans(self):
+        old_cluster = self.cluster.copy()
+        itr = 0
+        while True:
+            self.assign_cluster()
+            print("%dth assign cluster finish" % itr)
+            self.update_centroid()
+            print("%dth update centroid finish" % itr)
+
+            if (self.cluster == old_cluster).all():
+                print("convergence finish")
+                self.save_anchor()
+                return
+
+            old_cluster = self.cluster.copy()
+            itr += 1
+
+
+if __name__ == "__main__":
+    # VOC_dataset = VOC_DataLoad()
+
+    # for idx in range(VOC_dataset.__len__()):
+    #     print("#%d image" % idx)
+    #     show_image(VOC_dataset.__getitem__(idx))
+
+    # data = VOC_dataset.__getitem__(0)
+    # show_image(data)
+
+    anchor = anchor_box()
+    anchor.kmeans()
+    utils.npy_load("./dataset/anchor_sj.npy")
+    utils.npy_load("./dataset/anchor.npy")
