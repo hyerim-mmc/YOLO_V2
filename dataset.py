@@ -278,22 +278,23 @@ class anchor_box:
 
         self.box = box
         self.box = np.array(box, dtype=np.float32)
-        self.centroid = np.array(random.sample(list(self.box), k))
+        self.centroid = np.array(random.sample(list(self.box), self.k))
         self.cluster = np.empty(len(self.box))
 
-    def cal_dist(self, box):
+    def calc_dist(self, box):
         w_min = np.minimum(box[0], self.centroid[:, 0])
         h_min = np.minimum(box[1], self.centroid[:, 1])
 
         overlap = w_min * h_min
-        dist = 1 - (overlap / (box[0] * box[1] + self.centroid[:, 0] * self.centroid[:, 1] - overlap))
+        iou = overlap / (box[0] * box[1] + self.centroid[:, 0] * self.centroid[:, 1] - overlap)
+        dist = 1 - iou
         idx = np.argmin(dist)
 
         return idx
 
     def assign_cluster(self):
         for i, box in enumerate(self.box):
-            idx = self.cal_dist(box)
+            idx = self.calc_dist(box)
             self.cluster[i] = idx
 
     def update_centroid(self):
@@ -306,27 +307,28 @@ class anchor_box:
     def save_anchor(self):
         anchor = self.centroid.copy()
         area = anchor[:, 0] * anchor[:, 1]
-        # anchor = anchor(np.argsort(area))
 
-        np.save("./dataset/anchor.npy", anchor)
+        sorted_anchor = np.array(anchor)
+
+        for i in range(self.k):
+            order = np.argsort(area)[i]
+            sorted_anchor[i] = list(anchor[order])
+
+        np.save("./dataset/anchor.npy", sorted_anchor)
         print("anchor.npy saved!")
 
-    def kmeans(self):
+    def gen_anchor(self):
         old_cluster = self.cluster.copy()
-        itr = 0
+
         while True:
             self.assign_cluster()
-            print("%dth assign cluster finish" % itr)
             self.update_centroid()
-            print("%dth update centroid finish" % itr)
 
             if (self.cluster == old_cluster).all():
-                print("convergence finish")
                 self.save_anchor()
                 return
 
             old_cluster = self.cluster.copy()
-            itr += 1
 
 
 if __name__ == "__main__":
@@ -340,6 +342,6 @@ if __name__ == "__main__":
     # show_image(data)
 
     anchor = anchor_box()
-    anchor.kmeans()
-    utils.npy_load("./dataset/anchor_sj.npy")
-    utils.npy_load("./dataset/anchor.npy")
+    anchor.gen_anchor()
+    utils.load_npy("./dataset/anchor_sj.npy")
+    utils.load_npy("./dataset/anchor.npy")
