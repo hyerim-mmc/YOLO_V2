@@ -53,9 +53,9 @@ def show_image(data):
 
 
 class Resize:
-    def __init__(self, output_size, scale_factor=1.15):
-        assert isinstance(output_size, int)
-        self.output_size = output_size
+    def __init__(self, resize_size, scale_factor=1.15):
+        assert isinstance(resize_size, int)
+        self.resize_size = resize_size
         self.scale_factor = scale_factor
 
     def __call__(self, data):
@@ -63,11 +63,11 @@ class Resize:
         width, height = image.size
 
         if height > width:
-            new_h, new_w = self.output_size * height / width, self.output_size
+            new_h, new_w = self.resize_size * height / width, self.resize_size
         elif height == width:
             new_h, new_w = height, width
         else:
-            new_h, new_w = self.output_size, self.output_size * width / height
+            new_h, new_w = self.resize_size, self.resize_size * width / height
 
         new_h, new_w = int(new_h * self.scale_factor), int(new_w * self.scale_factor)
         new_image = TF.resize(image, (new_h, new_w), Image.BILINEAR)
@@ -84,16 +84,16 @@ class Resize:
 
 
 class RandomCrop:
-    def __init__(self, output_size):
-        self.output_size = output_size
+    def __init__(self, crop_size):
+        self.crop_size = crop_size
 
     def __call__(self, data):
         image, annotation = data
         width, height = image.size
-        rand_w = random.randint(0, width - self.output_size)
-        rand_h = random.randint(0, height - self.output_size)
+        rand_w = random.randint(0, width - self.crop_size)
+        rand_h = random.randint(0, height - self.crop_size)
 
-        crop_image = TF.crop(image, rand_h, rand_w, self.output_size, self.output_size)
+        crop_image = TF.crop(image, rand_h, rand_w, self.crop_size, self.crop_size)
 
         bboxes = annotation["bbox"]
         check = torch.ones((len(bboxes)))
@@ -110,13 +110,13 @@ class RandomCrop:
                 _bbox[0] = 1
             if _bbox[1] < 0:
                 _bbox[1] = 1
-            if _bbox[2] > self.output_size:
-                _bbox[2] = self.output_size - 1
-            if _bbox[3] > self.output_size:
-                _bbox[3] = self.output_size - 1
-            if center_x < 0 or center_x > self.output_size:
+            if _bbox[2] > self.crop_size:
+                _bbox[2] = self.crop_size - 1
+            if _bbox[3] > self.crop_size:
+                _bbox[3] = self.crop_size - 1
+            if center_x < 0 or center_x > self.crop_size:
                 check[idx] = 0
-            if center_y < 0 or center_y > self.output_size:
+            if center_y < 0 or center_y > self.crop_size:
                 check[idx] = 0
 
         check = check == 1
@@ -128,8 +128,8 @@ class RandomCrop:
         return (crop_image, annotation)
 
 
-class VOC_DataLoad(torch.utils.data.Dataset):
-    def __init__(self, output_size=416, train=True):
+class VOCDataset(torch.utils.data.Dataset):
+    def __init__(self, resize_size=416, crop_size=416, train=True):
         if os.path.exists("./dataset/train.npy") and os.path.exists("./dataset/val.npy"):
             self.train_set = np.load("./dataset/train.npy")
             self.test_set = np.load("./dataset/test.npy")
@@ -137,8 +137,8 @@ class VOC_DataLoad(torch.utils.data.Dataset):
             self.load_dataset()
 
         self.train = train
-        self.resize_bd = Resize(output_size=output_size)
-        self.crop_bd = RandomCrop(output_size=output_size)
+        self.resize_bd = Resize(resize_size=resize_size)
+        self.crop_bd = RandomCrop(crop_size=crop_size)
         self.transform = transforms.Compose(
             [
                 transforms.ColorJitter(brightness=0.75, hue=0.1, saturation=0.75),
@@ -248,7 +248,7 @@ class VOC_DataLoad(torch.utils.data.Dataset):
         return {"image": image, "annotation": annotation}
 
 
-class anchor_box:
+class Anchor_Box:
     def __init__(self, k=5, path="./dataset/train.npy"):
         self.k = k
         box = []
@@ -331,17 +331,29 @@ class anchor_box:
             old_cluster = self.cluster.copy()
 
 
+class ImageNetDataset(torch.utils.data.Dataset):
+    def __init__(self):
+        super(ImageNetDataset, self).__init__()
+
+    def __len__(self):
+        pass
+
+    def __getitem__(self, idx):
+        pass
+
+
 if __name__ == "__main__":
-    # VOC_dataset = VOC_DataLoad()
+    # VOC_dataset = VOCDataset()
 
     # for idx in range(VOC_dataset.__len__()):
     #     print("#%d image" % idx)
     #     show_image(VOC_dataset.__getitem__(idx))
 
-    # data = VOC_dataset.__getitem__(0)
-    # show_image(data)
+    # anchor = Anchor_Box()
+    # anchor.gen_anchor()
+    # utils.load_npy("./dataset/anchor.npy")
 
-    anchor = anchor_box()
-    anchor.gen_anchor()
-    utils.load_npy("./dataset/anchor_sj.npy")
-    utils.load_npy("./dataset/anchor.npy")
+    # parser = utils.Config_Parser()
+    # parser.load_parser()
+    data = np.loadtxt("./ImageNet/ILSVRC2011_devkit-2.0/data/ILSVRC2011_validation_ground_truth.txt")
+    print(data)

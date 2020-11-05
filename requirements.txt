@@ -2,3 +2,4 @@ pillow
 matplotlib
 wget
 numpy==1.16.0
+tensorboard

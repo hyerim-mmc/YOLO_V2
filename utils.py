@@ -1,8 +1,26 @@
 import torch
+import json
 import numpy as np
 from PIL import Image
 from PIL import ImageDraw
 from torchvision import transforms
+
+
+class Config_Parser:
+    def __init__(self, file_name="config.json"):
+        with open(file_name) as json_file:
+            self.json_data = json.load(json_file)
+
+    def load_parser(self):
+        return self.json_data
+
+    def parser(self, **kwargs):
+        data = {}
+        for key, value in kwargs.items():
+            data[key] = value
+
+        print(data)
+        return data
 
 
 def show_image(data):
