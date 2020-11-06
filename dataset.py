@@ -130,6 +130,7 @@ class RandomCrop:
 
 class VOCDataset(torch.utils.data.Dataset):
     def __init__(self, resize_size=416, crop_size=416, train_mode=True):
+        super().__init__()
         if os.path.exists("./dataset/train.npy") and os.path.exists("./dataset/val.npy"):
             self.train_set = np.load("./dataset/train.npy")
             self.test_set = np.load("./dataset/test.npy")
@@ -250,7 +251,7 @@ class VOCDataset(torch.utils.data.Dataset):
 
 class ImageNetDataset(torch.utils.data.Dataset):
     def __init__(self, img_size=256, val_mode=False):
-        super(ImageNetDataset, self).__init__()
+        super().__init__()
 
         self.base_path = "/home/mmc-server3/Server/server2/hyerim/yolov2/"
         self.data_path = "/home/mmc-server3/Server/dataset/ILSVRC2012_img_train/"
@@ -258,7 +259,7 @@ class ImageNetDataset(torch.utils.data.Dataset):
 
         if val_mode:
             self.data_path = "/home/mmc-server3/Server/dataset/ILSVRC2012_img_val/"
-            self.val_label = np.loadtxt("./ImageNet/ILSVRC2011_devkit-2.0/data/ILSVRC2011_validation_ground_truth.txt")
+            self.val_label = np.loadtxt("ILSVRC2011_validation_ground_truth.txt")
             self.val_cat = np.empty((0), dtype="str")
 
         data_set = np.empty((0), dtype="str")
@@ -404,7 +405,7 @@ if __name__ == "__main__":
     #     print("#%d image" % idx)
     #     show_image(VOC.__getitem__(idx))
 
-    ImageNet = ImageNetDataset(val_mode=True)
+    ImageNet = ImageNetDataset(val_mode=False)
     print(ImageNet.__getitem__(0))
 
     # anchor = Anchor_Box()
