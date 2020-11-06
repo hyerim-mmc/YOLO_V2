@@ -129,14 +129,14 @@ class RandomCrop:
 
 
 class VOCDataset(torch.utils.data.Dataset):
-    def __init__(self, resize_size=416, crop_size=416, train=True):
+    def __init__(self, resize_size=416, crop_size=416, train_mode=True):
         if os.path.exists("./dataset/train.npy") and os.path.exists("./dataset/val.npy"):
             self.train_set = np.load("./dataset/train.npy")
             self.test_set = np.load("./dataset/test.npy")
         else:
             self.load_dataset()
 
-        self.train = train
+        self.train_mode = train_mode
         self.resize_bd = Resize(resize_size=resize_size)
         self.crop_bd = RandomCrop(crop_size=crop_size)
         self.transform = transforms.Compose(
@@ -198,7 +198,7 @@ class VOCDataset(torch.utils.data.Dataset):
                                 }
                 }
         """
-        if self.train:
+        if self.train_mode:
             self.image_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/JPEGImages/" + "{0}.jpg".format(self.train_set[idx])
             self.xml_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/Annotations/" + "{0}.xml".format(self.train_set[idx])
 
@@ -246,6 +246,73 @@ class VOCDataset(torch.utils.data.Dataset):
             image = self.val_transform(image)
 
         return {"image": image, "annotation": annotation}
+
+
+class ImageNetDataset(torch.utils.data.Dataset):
+    def __init__(self, img_size=256, val_mode=False):
+        super(ImageNetDataset, self).__init__()
+
+        self.base_path = "/home/mmc-server3/Server/server2/hyerim/yolov2/"
+        self.data_path = "/home/mmc-server3/Server/dataset/ILSVRC2012_img_train/"
+        self.val_mode = val_mode
+
+        if val_mode:
+            self.data_path = "/home/mmc-server3/Server/dataset/ILSVRC2012_img_val/"
+            self.val_label = np.loadtxt("./ImageNet/ILSVRC2011_devkit-2.0/data/ILSVRC2011_validation_ground_truth.txt")
+            self.val_cat = np.empty((0), dtype="str")
+
+        data_set = np.empty((0), dtype="str")
+        self.category = os.listdir(self.data_path)
+        self.category.sort()
+
+        for i in self.category:
+            path = self.data_path + i
+            img_set = os.listdir(path)
+            img_set.sort()
+            img_set = np.array(img_set)
+            data_set = np.concatenate((data_set, img_set), 0)
+
+            if val_mode:
+                temp = np.stack([i for j in range(len(img_set))])
+                self.val_cat = np.concatenate((self.val_cat, temp), 0)
+
+        self.transformation = transforms.Compose(
+            [
+                transforms.RandomResizedCrop(img_size),
+                transforms.RandomHorizontalFlip(),
+                transforms.ColorJitter(brightness=0.75, saturation=0.75, hue=0.1),
+                transforms.ToTensor(),
+            ]
+        )
+        self.va_transformation = transforms.Compose([transforms.Resize([img_size, img_size]), transforms.ToTensor()])
+        self.data_set = data_set
+
+        print("Total Image : {0} // Total Category : {0}".format(self.data_set.shape[0], len(self.category)))
+
+    def __len__(self):
+        return len(self.data_set)
+
+    def __getitem__(self, idx):
+        data = self.data_set[idx]
+
+        if self.val_mode:
+            val_cat = self.val_cat[idx]
+            cat_idx = self.category.index(val_cat)
+            path = self.data_path + val_cat + "/" + data
+
+        else:
+            train_cat = data[:9]
+            cat_idx = self.category.index(train_cat)
+            path = self.data_path + train_cat + "/" + data
+
+        image = Image.open(path).convert("RGB")
+
+        if self.val_mode:
+            image = self.va_transformation(image)
+        else:
+            image = self.transformation(image)
+
+        return (image, cat_idx)
 
 
 class Anchor_Box:
@@ -331,29 +398,15 @@ class Anchor_Box:
             old_cluster = self.cluster.copy()
 
 
-class ImageNetDataset(torch.utils.data.Dataset):
-    def __init__(self):
-        super(ImageNetDataset, self).__init__()
-
-    def __len__(self):
-        pass
-
-    def __getitem__(self, idx):
-        pass
-
-
 if __name__ == "__main__":
-    # VOC_dataset = VOCDataset()
-
-    # for idx in range(VOC_dataset.__len__()):
+    # VOC = VOCDataset()
+    # for idx in range(VOC.__len__()):
     #     print("#%d image" % idx)
-    #     show_image(VOC_dataset.__getitem__(idx))
+    #     show_image(VOC.__getitem__(idx))
+
+    ImageNet = ImageNetDataset(val_mode=True)
+    print(ImageNet.__getitem__(0))
 
     # anchor = Anchor_Box()
     # anchor.gen_anchor()
     # utils.load_npy("./dataset/anchor.npy")
-
-    # parser = utils.Config_Parser()
-    # parser.load_parser()
-    data = np.loadtxt("./ImageNet/ILSVRC2011_devkit-2.0/data/ILSVRC2011_validation_ground_truth.txt")
-    print(data)
