@@ -407,7 +407,7 @@ if __name__ == "__main__":
 
     ImageNet = ImageNetDataset(val_mode=True)
     for idx in range(ImageNet.__len__()):
-        print(ImageNet.__getitem__(idx)
+        print(ImageNet.__getitem__(idx))
 
     # anchor = Anchor_Box()
     # anchor.gen_anchor()
