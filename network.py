@@ -7,7 +7,7 @@ from dataset import ImageNetDataset
 from torch.utils.data import DataLoader
 
 
-def conv_layer(
+def conv_net(
     input, output, kernel_size=3, padding=1, stride=1, eps=1e-5, momentum=0.9, negative_slope=0.01,
 ):
     conv = nn.Sequential(
@@ -24,24 +24,24 @@ class Darknet19(nn.Module):
     def __init__(self):
         super().__init__()
         self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.conv1 = conv_layer(3, 32)
-        self.conv2 = conv_layer(32, 64)
-        self.conv3 = conv_layer(64, 128)
-        self.conv4 = conv_layer(128, 64, kernel_size=1, padding=0)
-        self.conv5 = conv_layer(64, 128)
-        self.conv6 = conv_layer(128, 256)
-        self.conv7 = conv_layer(256, 128, kernel_size=1, padding=0)
-        self.conv8 = conv_layer(128, 256)
-        self.conv9 = conv_layer(256, 512)
-        self.conv10 = conv_layer(512, 256, kernel_size=1, padding=0)
-        self.conv11 = conv_layer(256, 512)
-        self.conv12 = conv_layer(512, 256, kernel_size=1, padding=0)
-        self.conv13 = conv_layer(256, 512)
-        self.conv14 = conv_layer(512, 1024)
-        self.conv15 = conv_layer(1024, 512, kernel_size=1, padding=0)
-        self.conv16 = conv_layer(512, 1024)
-        self.conv17 = conv_layer(1024, 512, kernel_size=1, padding=0)
-        self.conv18 = conv_layer(512, 1024)
+        self.conv1 = conv_net(3, 32)
+        self.conv2 = conv_net(32, 64)
+        self.conv3 = conv_net(64, 128)
+        self.conv4 = conv_net(128, 64, kernel_size=1, padding=0)
+        self.conv5 = conv_net(64, 128)
+        self.conv6 = conv_net(128, 256)
+        self.conv7 = conv_net(256, 128, kernel_size=1, padding=0)
+        self.conv8 = conv_net(128, 256)
+        self.conv9 = conv_net(256, 512)
+        self.conv10 = conv_net(512, 256, kernel_size=1, padding=0)
+        self.conv11 = conv_net(256, 512)
+        self.conv12 = conv_net(512, 256, kernel_size=1, padding=0)
+        self.conv13 = conv_net(256, 512)
+        self.conv14 = conv_net(512, 1024)
+        self.conv15 = conv_net(1024, 512, kernel_size=1, padding=0)
+        self.conv16 = conv_net(512, 1024)
+        self.conv17 = conv_net(1024, 512, kernel_size=1, padding=0)
+        self.conv18 = conv_net(512, 1024)
         self.conv19 = nn.Conv2d(1024, 1000, kernel_size=1, padding=0, bias=False)
         self.avgpool = nn.AdaptiveAvgPool2d(output_size=(1, 1))
 
