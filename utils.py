@@ -5,6 +5,24 @@ from PIL import ImageDraw
 from torchvision import transforms
 
 
+def optim(param, model):
+    if param["name"] == "sgd":
+        optimizer = torch.optim.SGD(
+            model.parameters(),
+            lr=param["lr"],
+            momentum=param["momentum"],
+            weight_decay=param["weight_decay"],
+        )
+    elif param["name"] == "adam":
+        optimizer = torch.optim.Adam(
+            model.parameters(),
+            lr=param["lr"],
+            weight_decay=param["weight_decay"],
+            eps=param["eps"],
+        )
+    return optimizer
+
+
 def show_image(data):
     image, annotation = data["image"], data["annotation"]
 
