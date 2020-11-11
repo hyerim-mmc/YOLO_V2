@@ -77,7 +77,7 @@ class Pretrain_model:
         self,
         batch_size=128,
         epoch=10,
-        lr=0.001,
+        lr=0.1,
         device="cpu",
         weight_decay=0.0005,
         momentum=0.9,
@@ -112,7 +112,7 @@ class Pretrain_model:
     def decay_lr(self, step, epoch):
         if (epoch == 0) and (step <= self.burn_in):
             power = 4
-            lr = self.lr * (step / self.burn_in) ** power
+            lr = 1e-3 * (step / self.burn_in) ** power
             for param in self.optimizer.param_groups:
                 param["lr"] = lr
 
@@ -167,7 +167,7 @@ class Pretrain_model:
                             val_hypothesis = self.model.forward(val_image)
                             val_loss = self.criterion(val_hypothesis, val_annotation)
 
-                            # calculate precision for train_dataset
+                            # calculate precision for val_dataset
                             Val_Loss.append(val_loss.detach().cpu().numpy())
                             idx = torch.argmax(val_hypothesis, dim=1)
                             total = len(val_annotation)
