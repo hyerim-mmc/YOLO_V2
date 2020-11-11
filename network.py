@@ -139,8 +139,8 @@ class Pretrain_model:
 
                 # mini batch is over
                 if divi == self.division:
-                    self.optimizer.step()
                     self.decay_lr(step, epoch)
+                    self.optimizer.step()
                     divi = 0
                     step += 1
 
@@ -151,7 +151,9 @@ class Pretrain_model:
                     total = len(annotation)
                     total_correct = (idx == annotation).float().sum()
                     train_precision = total_correct / total
-                    Train_Precision.append(train_precision.detach().cpu().numpy())
+                    Train_Precision.append(
+                        train_precision.detach().cpu().numpy() if torch.cuda.is_available() else train_precision.numpy()
+                    )
 
                 if step % print_size == 0 and divi == 0:
                     with torch.no_grad():
