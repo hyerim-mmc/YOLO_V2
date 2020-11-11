@@ -100,9 +100,9 @@ class Pretrain_model:
         self.burn_in = burn_in
         self.load_path = load_path
         self.train_dataset = DataLoader(
-            ImageNetDataset, batch_size=self.mini_batch_size, shuffle=True
+            ImageNetDataset(), batch_size=self.mini_batch_size, shuffle=True
         )
-        self.val_dataset = DataLoader(ImageNetDataset, shuffle=True)
+        self.val_dataset = DataLoader(ImageNetDataset(val_mode=True), batch_size=1, shuffle=True)
         self.model = Darknet19.to(self.device)
         self.log_path = "./dataset/tensorboard/"
 
@@ -217,5 +217,5 @@ class Pretrain_model:
 
 
 if __name__ == "__main__":
-    darknet19 = Pretrain_model(device="cuda:2")
+    darknet19 = Pretrain_model(device="cpu")
     darknet19.run()
