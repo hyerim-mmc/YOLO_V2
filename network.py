@@ -7,9 +7,7 @@ from dataset import ImageNetDataset
 from torch.utils.data import DataLoader
 
 
-def conv_net(
-    input, output, kernel_size=3, padding=1, stride=1, eps=1e-5, momentum=0.9, negative_slope=0.01,
-):
+def conv_net(input, output, kernel_size=3, padding=1, stride=1, eps=1e-5, momentum=0.9, negative_slope=0.01):
     conv = nn.Sequential(
         nn.Conv2d(input, output, kernel_size=kernel_size, padding=padding, stride=stride, bias=False,),
         nn.BatchNorm2d(output, eps=eps, momentum=momentum),
@@ -79,7 +77,7 @@ class Pretrain_model:
         self,
         batch_size=128,
         epoch=10,
-        lr=0.1,
+        lr=0.001,
         device="cpu",
         weight_decay=0.0005,
         momentum=0.9,
@@ -111,9 +109,9 @@ class Pretrain_model:
         self.optimizer = utils.optim(param, self.model)
         self.criterion = nn.CrossEntropyLoss()
 
-    def decay_lr(self, step):
-        power = 4
-        if step <= self.burn_in:
+    def decay_lr(self, step, epoch):
+        if (epoch == 0) and (step <= self.burn_in):
+            power = 4
             lr = self.lr * (step / self.burn_in) ** power
             for param in self.optimizer.param_groups:
                 param["lr"] = lr
@@ -142,7 +140,7 @@ class Pretrain_model:
                 # mini batch is over
                 if divi == self.division:
                     self.optimizer.step()
-                    self.decay_lr(step)
+                    self.decay_lr(step, epoch)
                     divi = 0
                     step += 1
 
@@ -184,6 +182,7 @@ class Pretrain_model:
                             k += 1
                             if k == 10:
                                 break
+
                     loss = np.array(Loss).mean()
                     val_loss = np.array(Val_Loss).mean()
                     train_precision = np.array(Train_Precision).mean()
@@ -194,11 +193,11 @@ class Pretrain_model:
                             epoch + 1, self.epoch, step, loss, val_loss, train_precision, val_precision,
                         )
                     )
-                    # utils.tensorboard(
-                    #     self.log_path,
-                    #     (loss, val_loss, train_precision, val_precision),
-                    #     step,
-                    # )
+                    utils.tensorboard(
+                        self.log_path,
+                        (loss.tolist(), val_loss.tolist(), train_precision.tolist(), val_precision.tolist()),
+                        step,
+                    )
 
                     Loss = []
                     Val_Loss = []

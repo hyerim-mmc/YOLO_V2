@@ -6,8 +6,8 @@ from torch.utils.tensorboard import SummaryWriter
 def tensorboard(log_path, results, step):
     writer = SummaryWriter(log_path)
     loss, val_loss = results
-    writer.add_scalars("Loss/Loss", loss.items(), step)
-    writer.add_scalars("Loss/Validation Loss", val_loss, step)
+    writer.add_scalars("Loss/Loss", loss.item(), step)
+    writer.add_scalars("Loss/Validation Loss", val_loss.item(), step)
 
 
 def run():
