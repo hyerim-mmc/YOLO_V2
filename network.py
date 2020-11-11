@@ -119,7 +119,7 @@ class Pretrain_model:
         power = 4
         if step <= self.burn_in:
             lr = self.lr * (step / self.burn_in) ** power
-            for param in self.optimizer.param_group:
+            for param in self.optimizer.param_groups:
                 param["lr"] = lr
 
     def run(self):

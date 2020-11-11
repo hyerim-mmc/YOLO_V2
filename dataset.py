@@ -299,7 +299,7 @@ class ImageNetDataset(torch.utils.data.Dataset):
         self.data_set = data_set
 
         print(
-            "Total Image : {0} // Total Category : {0}".format(
+            "Total Image : {0} | Total Category : {0}".format(
                 self.data_set.shape[0], len(self.category)
             )
         )
