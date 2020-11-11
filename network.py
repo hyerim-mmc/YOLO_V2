@@ -85,7 +85,7 @@ class Pretrain_model:
         device="cpu",
         weight_decay=0.0005,
         momentum=0.9,
-        division=2,7
+        division=2,
         burn_in=1000,
         load_path=None,
     ):
