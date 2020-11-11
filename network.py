@@ -217,5 +217,5 @@ class Pretrain_model:
 
 
 if __name__ == "__main__":
-    darknet19 = Pretrain_model(device="cpu")
+    darknet19 = Pretrain_model(device="cuda:2")
     darknet19.run()
