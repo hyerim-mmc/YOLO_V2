@@ -11,9 +11,7 @@ def conv_net(
     input, output, kernel_size=3, padding=1, stride=1, eps=1e-5, momentum=0.9, negative_slope=0.01,
 ):
     conv = nn.Sequential(
-        nn.Conv2d(
-            input, output, kernel_size=kernel_size, padding=padding, stride=stride, bias=False,
-        ),
+        nn.Conv2d(input, output, kernel_size=kernel_size, padding=padding, stride=stride, bias=False,),
         nn.BatchNorm2d(output, eps=eps, momentum=momentum),
         nn.LeakyReLU(negative_slope=negative_slope),
     )
@@ -99,9 +97,7 @@ class Pretrain_model:
         self.division = division
         self.burn_in = burn_in
         self.load_path = load_path
-        self.train_dataset = DataLoader(
-            ImageNetDataset(), batch_size=self.mini_batch_size, shuffle=True
-        )
+        self.train_dataset = DataLoader(ImageNetDataset(), batch_size=self.mini_batch_size, shuffle=True)
         self.val_dataset = DataLoader(ImageNetDataset(val_mode=True), batch_size=1, shuffle=True)
         self.model = Darknet19().to(self.device)
         self.log_path = "./dataset/tensorboard/"
@@ -195,17 +191,13 @@ class Pretrain_model:
 
                     print(
                         "Epoch: {}/{} | Step: {} | Loss: {:.5f} | Val_Loss: {:.5f} | Prec: {:.4f} | Val_Prec: {:.4f}".format(
-                            epoch + 1,
-                            self.epoch,
-                            step,
-                            loss,
-                            val_loss,
-                            train_precision,
-                            val_precision,
+                            epoch + 1, self.epoch, step, loss, val_loss, train_precision, val_precision,
                         )
                     )
                     utils.tensorboard(
-                        self.log_path, (loss, val_loss, train_precision, val_precision), step
+                        self.log_path,
+                        (loss.item(), val_loss.item(), train_precision.item(), val_precision.item()),
+                        step,
                     )
 
                     Loss = []
