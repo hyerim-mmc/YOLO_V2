@@ -3,6 +3,16 @@ import numpy as np
 from PIL import Image
 from PIL import ImageDraw
 from torchvision import transforms
+from torch.utils.tensorboard import SummaryWriter
+
+
+def tensorboard(log_path, results, step):
+    writer = SummaryWriter(log_path)
+    loss, val_loss, train_precision, val_precision = results
+    writer.add_scalars("Loss/Loss", loss, step)
+    writer.add_scalars("Loss/Validation Loss", val_loss, step)
+    writer.add_scalars("Precision/Train Precision", train_precision, step)
+    writer.add_scalars("Precision/Validation Precision", val_precision, step)
 
 
 def optim(param, model):

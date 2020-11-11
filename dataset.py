@@ -2,7 +2,6 @@ import os
 import random
 import torch
 import numpy as np
-import utils
 import xml.etree.ElementTree as Et
 import torch.utils.data.dataset
 import torchvision.transforms.functional as TF
@@ -200,12 +199,20 @@ class VOCDataset(torch.utils.data.Dataset):
                 }
         """
         if self.train_mode:
-            self.image_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/JPEGImages/" + "{0}.jpg".format(self.train_set[idx])
-            self.xml_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/Annotations/" + "{0}.xml".format(self.train_set[idx])
+            self.image_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/JPEGImages/" + "{0}.jpg".format(
+                self.train_set[idx]
+            )
+            self.xml_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/Annotations/" + "{0}.xml".format(
+                self.train_set[idx]
+            )
 
         else:
-            self.image_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/JPEGImages/" + "{0}.jpg".format(self.test_set[idx])
-            self.xml_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/Annotations/" + "{0}.xml".format(self.test_set[idx])
+            self.image_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/JPEGImages/" + "{0}.jpg".format(
+                self.test_set[idx]
+            )
+            self.xml_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/Annotations/" + "{0}.xml".format(
+                self.test_set[idx]
+            )
 
         img_name = self.image_path
         xml_name = self.xml_path
@@ -271,6 +278,7 @@ class ImageNetDataset(torch.utils.data.Dataset):
             img_set = os.listdir(path)
             img_set.sort()
             img_set = np.array(img_set)
+            img_set = img_set.reshape((-1,))
             data_set = np.concatenate((data_set, img_set), 0)
 
             if val_mode:
@@ -285,10 +293,16 @@ class ImageNetDataset(torch.utils.data.Dataset):
                 transforms.ToTensor(),
             ]
         )
-        self.va_transformation = transforms.Compose([transforms.Resize([img_size, img_size]), transforms.ToTensor()])
+        self.va_transformation = transforms.Compose(
+            [transforms.Resize([img_size, img_size]), transforms.ToTensor()]
+        )
         self.data_set = data_set
 
-        print("Total Image : {0} // Total Category : {0}".format(self.data_set.shape[0], len(self.category)))
+        print(
+            "Total Image : {0} // Total Category : {0}".format(
+                self.data_set.shape[0], len(self.category)
+            )
+        )
 
     def __len__(self):
         return len(self.data_set)

@@ -79,12 +79,13 @@ class Darknet19(nn.Module):
 class Pretrain_model:
     def __init__(
         self,
-        batch_size=64,
+        batch_size=128,
         epoch=10,
         lr=0.1,
+        device="cpu",
         weight_decay=0.0005,
         momentum=0.9,
-        division=1,
+        division=2,
         burn_in=1000,
         load_path=None,
     ):
@@ -92,6 +93,7 @@ class Pretrain_model:
         self.mini_batch_size = int(self.batch_size / division)
         self.epoch = epoch
         self.lr = lr
+        self.device = torch.device(device)
         self.weight_decay = weight_decay
         self.momentum = momentum
         self.division = division
@@ -101,7 +103,8 @@ class Pretrain_model:
             ImageNetDataset, batch_size=self.mini_batch_size, shuffle=True
         )
         self.val_dataset = DataLoader(ImageNetDataset, shuffle=True)
-        self.model = model
+        self.model = Darknet19.to(self.device)
+        self.log_path = "./dataset/tensorboard/"
 
         param = {}
         param["name"] = "sgd"
@@ -112,12 +115,107 @@ class Pretrain_model:
         self.optimizer = utils.optim(param, self.model)
         self.criterion = nn.CrossEntropyLoss()
 
-    def decay_lr(self):
-        pass
+    def decay_lr(self, step):
+        power = 4
+        if step <= self.burn_in:
+            lr = self.lr * (step / self.burn_in) ** power
+            param["lr"] = lr
 
     def run(self):
-        print(
-            "Epoch {:4d}/{} Batch {}/{} Cost : {:.6f}".format(
-                epoch, nb_epochs, batch_idx + 1, len(dataloader), cost.item()
-            )
-        )
+        step = 1
+        print_size = 100
+        for epoch in range(self.epoch):
+            divi = 0
+            Loss = []
+            Val_Loss = []
+            Train_Precision = []
+            Val_Precision = []
+
+            for data in self.train_dataset:
+                # train mode
+                self.model.train()
+                image, annotation = data[0].to(self.device), data[1].to(self.device)
+
+                self.optimizer.zero_grad()
+                hypothesis = self.model.forward(image)
+                loss = self.criterion(hypothesis, annotation)
+                loss.backward()
+                divi += 1
+
+                # mini batch is over
+                if divi == self.division:
+                    self.optimizer.step()
+                    self.decay_lr(step)
+                    divi = 0
+                    step += 1
+
+                # calculate precision for train_dataset
+                with torch.no_grad():
+                    Loss.append(loss.detach().cpu().numpy())
+                    idx = torch.argmax(hypothesis, dim=1)
+                    total = len(annotation)
+                    total_correct = (idx == annotation).float().sum()
+                    train_precision = total_correct / total
+                    Train_Precision.append(train_precision.detach().cpu().numpy())
+
+                if step % print_size == 0 and division == 0:
+                    with torch.no_grad():
+                        # eval mode
+                        self.model.eval()
+                        k = 0
+                        for val_data in self.val_dataset:
+                            val_image, val_annotation = (
+                                val_data[0].to(self.device),
+                                val_data[1].to(self.device),
+                            )
+
+                            val_hypothesis = self.model.forward(val_image)
+                            val_loss = self.criterion(val_hypothesis, val_annotation)
+
+                            # calculate precision for train_dataset
+                            Val_Loss.append(val_loss.detach().cpu().numpy())
+                            idx = torch.argmax(val_hypothesis, dim=1)
+                            total = len(val_annotation)
+                            total_correct = (idx == val_annotation).float().sum()
+                            val_precision = total_correct / total
+
+                            Val_Precision.append(
+                                val_precision.detach().cpu().numpy()
+                                if torch.cuda.is_available()
+                                else val_precision.numpy()
+                            )
+                            k += 1
+                            if k == 10:
+                                break
+                    loss = np.array(Loss).mean()
+                    val_loss = np.array(Val_Loss).mean()
+                    train_precision = np.array(Train_Precision).mean()
+                    val_precision = np.array(Val_Precision).mean()
+
+                    print(
+                        "Epoch: {}/{} | Step: {} | Loss: {:.5f} | Val_Loss: {:.5f} | Prec: {:.4f} | Val_Prec: {:.4f}".format(
+                            epoch + 1,
+                            self.epoch,
+                            step,
+                            loss,
+                            val_loss,
+                            train_precision,
+                            val_precision,
+                        )
+                    )
+                    utils.tensorboard(
+                        self.log_path, (loss, val_loss, train_precision, val_precision), step
+                    )
+
+                    Loss = []
+                    Val_Loss = []
+                    Train_Precision = []
+                    Val_Precision = []
+
+            save_path = "./dataset/Darknet19.pth"
+            torch.save(self.model.state_dict(), save_path)
+
+
+if __name__ == "__main__":
+    darknet19 = Pretrain_model(device="cuda:2")
+    darknet19.run()
