@@ -190,7 +190,7 @@ class Pretrain_model:
                     val_precision = np.array(Val_Precision).mean()
 
                     print(
-                        "Epoch: {}/{} | Step: {} | Loss: {:.5f} | Val_Loss: {:.5f} | Prec: {:.4f} | Val_Prec: {:.4f}".format(
+                        "Epoch: {}/{} | Step: {} | Loss: {:.5f} | Val_Loss: {:.5f} | Train_Precision: {:.4f} | Val_Precision: {:.4f}".format(
                             epoch + 1, self.epoch, step, loss, val_loss, train_precision, val_precision,
                         )
                     )
