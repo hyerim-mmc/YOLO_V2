@@ -159,7 +159,7 @@ class Pretrain_model:
                     train_precision = total_correct / total
                     Train_Precision.append(train_precision.detach().cpu().numpy())
 
-                if step % print_size == 0 and division == 0:
+                if step % print_size == 0 and divi == 0:
                     with torch.no_grad():
                         # eval mode
                         self.model.eval()
