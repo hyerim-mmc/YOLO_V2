@@ -193,11 +193,11 @@ class Pretrain_model:
                             epoch + 1, self.epoch, step, loss, val_loss, train_precision, val_precision,
                         )
                     )
-                    utils.tensorboard(
-                        self.log_path,
-                        (loss.tolist(), val_loss.tolist(), train_precision.tolist(), val_precision.tolist()),
-                        step,
-                    )
+                    # utils.tensorboard(
+                    #     self.log_path,
+                    #     (loss.tolist(), val_loss.tolist(), train_precision.tolist(), val_precision.tolist()),
+                    #     step,
+                    # )
 
                     Loss = []
                     Val_Loss = []
