@@ -103,7 +103,7 @@ class Pretrain_model:
             ImageNetDataset(), batch_size=self.mini_batch_size, shuffle=True
         )
         self.val_dataset = DataLoader(ImageNetDataset(val_mode=True), batch_size=1, shuffle=True)
-        self.model = Darknet19.to(self.device)
+        self.model = Darknet19().to(self.device)
         self.log_path = "./dataset/tensorboard/"
 
         param = {}
