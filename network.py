@@ -139,7 +139,6 @@ class Pretrain_model:
                 self.model.train()
                 image, annotation = data[0].to(self.device), data[1].to(self.device)
 
-                self.optimizer.zero_grad()
                 hypothesis = self.model.forward(image)
                 loss = self.criterion(hypothesis, annotation)
                 loss.backward()
@@ -149,6 +148,8 @@ class Pretrain_model:
                 if divi == self.division:
                     self.decay_lr(step, epoch)
                     self.optimizer.step()
+                    self.optimizer.zero_grad()
+
                     divi = 0
                     step += 1
 
@@ -205,7 +206,7 @@ class Pretrain_model:
                     )
                     # utils.tensorboard(
                     #     self.log_path,
-                    #     (loss.tolist(), val_loss.tolist(), train_precision.tolist(), val_precision.tolist()),
+                    #     (loss.tolist()[0], val_loss.tolist()[0], train_precision.tolist()[0], val_precision.tolist()[0]),
                     #     step,
                     # )
 
