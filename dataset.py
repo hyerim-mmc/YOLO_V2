@@ -130,20 +130,18 @@ class RandomCrop:
 class VOCDataset(torch.utils.data.Dataset):
     def __init__(self, resize_size=416, crop_size=416, train_mode=True):
         super().__init__()
+        self.train_mode = train_mode
+
         if os.path.exists("./dataset/train.npy") and os.path.exists("./dataset/val.npy"):
             self.train_set = np.load("./dataset/train.npy")
             self.test_set = np.load("./dataset/test.npy")
         else:
             self.load_dataset()
 
-        self.train_mode = train_mode
         self.resize_bd = Resize(resize_size=resize_size)
         self.crop_bd = RandomCrop(crop_size=crop_size)
         self.transform = transforms.Compose(
-            [
-                transforms.ColorJitter(brightness=0.75, hue=0.1, saturation=0.75),
-                transforms.ToTensor(),
-            ]
+            [transforms.ColorJitter(brightness=0.75, hue=0.1, saturation=0.75), transforms.ToTensor(),]
         )
         self.val_transform = transforms.Compose([transforms.ToTensor()])
 
@@ -186,6 +184,11 @@ class VOCDataset(torch.utils.data.Dataset):
 
         self.train_set, self.test_set = self.data_set[split:], self.data_set[:split]
 
+        if self.train_mode:
+            self.data_set = self.train_set
+        else:
+            self.data_set = self.test_set
+
         np.save("dataset/train.npy", self.train_set)
         np.save("dataset/test.npy", self.test_set)
 
@@ -199,20 +202,12 @@ class VOCDataset(torch.utils.data.Dataset):
                 }
         """
         if self.train_mode:
-            self.image_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/JPEGImages/" + "{0}.jpg".format(
-                self.train_set[idx]
-            )
-            self.xml_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/Annotations/" + "{0}.xml".format(
-                self.train_set[idx]
-            )
+            self.image_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/JPEGImages/" + "{0}.jpg".format(self.train_set[idx])
+            self.xml_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/Annotations/" + "{0}.xml".format(self.train_set[idx])
 
         else:
-            self.image_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/JPEGImages/" + "{0}.jpg".format(
-                self.test_set[idx]
-            )
-            self.xml_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/Annotations/" + "{0}.xml".format(
-                self.test_set[idx]
-            )
+            self.image_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/JPEGImages/" + "{0}.jpg".format(self.test_set[idx])
+            self.xml_path = "./Pascal_VOC_2012/VOCdevkit/VOC2012/Annotations/" + "{0}.xml".format(self.test_set[idx])
 
         img_name = self.image_path
         xml_name = self.xml_path
@@ -243,7 +238,7 @@ class VOCDataset(torch.utils.data.Dataset):
         annotation["label"] = torch.tensor(labels).long()
         annotation["bbox"] = torch.tensor(bboxes).float()
 
-        if self.train:
+        if self.train_mode:
             image, annotation = self.resize_bd((image, annotation))
             image, annotation = self.crop_bd((image, annotation))
             image = self.transform(image)
@@ -263,7 +258,7 @@ class ImageNetDataset(torch.utils.data.Dataset):
         self.base_path = "/home/mmc-server3/Server/server2/hyerim/yolov2/"
         self.data_path = "/home/mmc-server3/Server/dataset/ILSVRC2012_img_train/"
         self.val_mode = val_mode
-
+        self.img_size = img_size
         if val_mode:
             self.data_path = "/home/mmc-server3/Server/dataset/ILSVRC2012_img_val/"
             self.val_label = np.loadtxt("ILSVRC2011_validation_ground_truth.txt")
@@ -293,16 +288,10 @@ class ImageNetDataset(torch.utils.data.Dataset):
                 transforms.ToTensor(),
             ]
         )
-        self.va_transformation = transforms.Compose(
-            [transforms.Resize([img_size, img_size]), transforms.ToTensor()]
-        )
+        self.va_transformation = transforms.Compose([transforms.Resize([img_size, img_size]), transforms.ToTensor()])
         self.data_set = data_set
 
-        print(
-            "Total Image : {0} | Total Category : {0}".format(
-                self.data_set.shape[0], len(self.category)
-            )
-        )
+        print("Total Image : {0} | Total Category : {0}".format(self.data_set.shape[0], len(self.category)))
 
     def __len__(self):
         return len(self.data_set)

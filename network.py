@@ -42,29 +42,36 @@ class Darknet19(nn.Module):
         self.avgpool = nn.AdaptiveAvgPool2d(output_size=(1, 1))
 
     def forward(self, x):
+        # block1
         x1 = self.conv1(x)
+        # block2
         x2 = self.maxpool(x1)
         x3 = self.conv2(x2)
+        # block3
         x4 = self.maxpool(x3)
         x5 = self.conv3(x4)
         x6 = self.conv4(x5)
         x7 = self.conv5(x6)
+        # block4
         x8 = self.maxpool(x7)
         x9 = self.conv6(x8)
         x10 = self.conv7(x9)
         x11 = self.conv8(x10)
+        # block5
         x12 = self.maxpool(x11)
         x13 = self.conv9(x12)
         x14 = self.conv10(x13)
         x15 = self.conv11(x14)
         x16 = self.conv12(x15)
         x17 = self.conv13(x16)
+        # block6
         x18 = self.maxpool(x17)
         x19 = self.conv14(x18)
         x20 = self.conv15(x19)
         x21 = self.conv16(x20)
         x22 = self.conv17(x21)
         x23 = self.conv18(x22)
+
         x24 = self.conv19(x23)
         x25 = self.avgpool(x24)
         x25 = x25.view((x.shape[0], 1000))
@@ -95,6 +102,7 @@ class Pretrain_model:
         self.division = division
         self.burn_in = burn_in
         self.load_path = load_path
+
         self.train_dataset = DataLoader(ImageNetDataset(), batch_size=self.mini_batch_size, shuffle=True)
         self.val_dataset = DataLoader(ImageNetDataset(val_mode=True), batch_size=1, shuffle=True)
         self.model = Darknet19().to(self.device)
@@ -106,7 +114,7 @@ class Pretrain_model:
         param["weight_decay"] = weight_decay
         param["momentum"] = momentum
 
-        self.optimizer = utils.optim(param, self.model)
+        self.optimizer = utils.get_optim(param, self.model)
         self.criterion = nn.CrossEntropyLoss()
 
     def decay_lr(self, step, epoch):

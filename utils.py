@@ -15,20 +15,14 @@ def tensorboard(log_path, results, step):
     writer.add_scalars("Precision/Validation Precision", val_precision, step)
 
 
-def optim(param, model):
+def get_optim(param, model):
     if param["name"] == "sgd":
         optimizer = torch.optim.SGD(
-            model.parameters(),
-            lr=param["lr"],
-            momentum=param["momentum"],
-            weight_decay=param["weight_decay"],
+            model.parameters(), lr=param["lr"], momentum=param["momentum"], weight_decay=param["weight_decay"],
         )
     elif param["name"] == "adam":
         optimizer = torch.optim.Adam(
-            model.parameters(),
-            lr=param["lr"],
-            weight_decay=param["weight_decay"],
-            eps=param["eps"],
+            model.parameters(), lr=param["lr"], weight_decay=param["weight_decay"], eps=param["eps"],
         )
     return optimizer
 
