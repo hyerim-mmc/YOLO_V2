@@ -16,8 +16,16 @@ def conv_net(input, output, kernel_size=3, padding=1, stride=1, eps=1e-5, moment
     return conv
 
 
-def reorg():
-    pass
+class Reorg(nn.Module):
+    def __init__(self, stride=2):
+        super().__init__()
+        self.stride = stride
+
+    def forward(self, x):
+        N, C, H, W = x.data.size()
+        ws = self.stride
+        hs = self.stride
+        pass
 
 
 class Darknet19(nn.Module):
@@ -105,8 +113,8 @@ class Pretrain_model:
         self.division = division
         self.burn_in = burn_in
 
-        self.train_dataset = DataLoader(ImageNetDataset(), batch_size=self.mini_batch_size, shuffle=True)
-        self.val_dataset = DataLoader(ImageNetDataset(val_mode=True), batch_size=1, shuffle=True)
+        self.train_dataset = DataLoader(ImageNetDataset(), batch_size=self.mini_batch_size, shuffle=True, num_workers=8)
+        self.val_dataset = DataLoader(ImageNetDataset(val_mode=True), batch_size=1, shuffle=True, num_workers=8)
         self.model = Darknet19().to(self.device)
         self.log_path = "./dataset/tensorboard/"
 
@@ -216,24 +224,27 @@ class Pretrain_model:
                     Val_Loss = []
                     Train_Precision = []
                     Val_Precision = []
+                    
+                    save_path = "./dataset/Darknet19/epoch_{0}.pth".format(epoch + 1)
+                    torch.save(self.model.state_dict(), save_path)
 
-            save_path = "./dataset/Darknet19.pth"
+            save_path = "./dataset/Darknet19/Darknet19.pth"
             torch.save(self.model.state_dict(), save_path)
 
 
-class Yolov2(nn.Module):
-    def __init__(self, device="cpu"):
-        super().__init__()
-        self.device = torch.device(device)
+# class Yolov2(nn.Module):
+#     def __init__(self, device="cpu"):
+#         super().__init__()
+#         self.device = torch.device(device)
 
-        darknet19 = Darknet19()
-        darknet19.load_state_dict(torch.load("/dataset/Darknet19.pth"))
-        # pth parsing
+#         darknet19 = Darknet19()
+#         darknet19.load_state_dict(torch.load("/dataset/Darknet19.pth"), map_location=self.device)
+#         # pth parsing
 
-        self.conv1 = conv_net()
+#         self.conv1 = conv_net()
 
-    def forward(self):
-        pass
+#     def forward(self):
+#         pass
 
 
 if __name__ == "__main__":
