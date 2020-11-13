@@ -224,12 +224,12 @@ class Pretrain_model:
                     Val_Loss = []
                     Train_Precision = []
                     Val_Precision = []
-                    
-                    save_path = "./dataset/Darknet19/epoch_{0}.pth".format(epoch + 1)
-                    torch.save(self.model.state_dict(), save_path)
 
-            save_path = "./dataset/Darknet19/Darknet19.pth"
+            save_path = "./dataset/Darknet19/epoch_{0}.pth".format(epoch + 1)
             torch.save(self.model.state_dict(), save_path)
+
+        save_path = "./dataset/Darknet19/Darknet19.pth"
+        torch.save(self.model.state_dict(), save_path)
 
 
 # class Yolov2(nn.Module):
