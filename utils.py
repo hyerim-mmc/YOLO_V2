@@ -12,10 +12,10 @@ def load_pth(pth_path="./dataset/Darknet19/Darknet19.pth", save_path="darknet19.
     pth = torch.load(pth_path, map_location="cpu")
     print(pth)
 
-    # pth file format s
-    # ('conv#.1.weight', tensor...),
-    # 'conv#.1.bias',
-    # 'conv#.1.running_mean','conv#.1.running_var',
+    # [pth file format]
+    # 'conv#.0.weight'
+    # 'conv#.1.weight', 'conv#.1.bias',
+    # 'conv#.1.running_mean', 'conv#.1.running_var',
     # 'conv#.1.num_batches_tracked'
 
 
