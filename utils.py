@@ -1,9 +1,28 @@
+import sys
 import torch
 import numpy as np
 from PIL import Image
 from PIL import ImageDraw
 from torchvision import transforms
 from torch.utils.tensorboard import SummaryWriter
+
+
+def load_pth(pth_path="./dataset/Darknet19/Darknet19.pth", save_path="darknet19.txt"):
+    sys.stdout(save_path, "w")
+    pth = torch.load(pth_path, map_location="cpu")
+    print(pth)
+
+    # pth file format s
+    # ('conv#.1.weight', tensor...),
+    # 'conv#.1.bias',
+    # 'conv#.1.running_mean','conv#.1.running_var',
+    # 'conv#.1.num_batches_tracked'
+
+
+def load_npy(path):
+    file = np.load(path)
+    print("%s : " % path)
+    print(file)
 
 
 def tensorboard(log_path, results, step):
@@ -40,12 +59,6 @@ def show_image(data):
         # draw.text((bbox[0], bbox[1]), name)
 
     image.show()
-
-
-def load_npy(path):
-    file = np.load(path)
-    print("%s : " % path)
-    print(file)
 
 
 def calc_IOU(self, box):

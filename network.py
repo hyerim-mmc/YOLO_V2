@@ -22,10 +22,16 @@ class Reorg(nn.Module):
         self.stride = stride
 
     def forward(self, x):
-        N, C, H, W = x.data.size()
+        B, C, H, W = x.data.size()
         ws = self.stride
         hs = self.stride
-        pass
+
+        x = x.view(B, C, int(H / hs), hs, int(W / ws), ws).transpose(3, 4).contiguous()
+        x = x.view(B, C, int(H / hs * W / ws), hs * ws).transpose(2, 3).contiguous()
+        x = x.view(B, C, hs * ws, int(H / hs), int(W / ws)).transpose(1, 2).contiguous()
+        x = x.view(B, hs * ws * C, int(H / hs), int(W / ws))
+
+        return x
 
 
 class Darknet19(nn.Module):
@@ -232,21 +238,41 @@ class Pretrain_model:
         torch.save(self.model.state_dict(), save_path)
 
 
-# class Yolov2(nn.Module):
-#     def __init__(self, device="cpu"):
-#         super().__init__()
-#         self.device = torch.device(device)
+class Yolov2(nn.Module):
+    def __init__(self, n_bbox=5, n_class=20, device="cpu", pretrained=None):
+        super().__init__()
+        self.device = torch.device(device)
+        self.n_bbox = n_bbox
+        self.n_class = n_class
+        darknet19 = Darknet19()
 
-#         darknet19 = Darknet19()
-#         darknet19.load_state_dict(torch.load("/dataset/Darknet19.pth"), map_location=self.device)
-#         # pth parsing
+        if pretrained:
+            print("Load pretrained Darknet19 model...")
+            darknet19.load_state_dict(torch.load("/dataset/Darknet19/Darknet19.pth"), map_location=self.device)
+        # pth parsing
 
-#         self.conv1 = conv_net()
+        self.conv1 = conv_net(1024, 1024)
+        self.conv2 = conv_net(1024, 1024)
+        self.conv3 = conv_net(512, 64, kernel_size=1, padding=0)
+        self.reorg = Reorg()
+        self.conv4 = conv_net(1024 + 256, 1024)
+        self.conv5 = nn.Conv2d(1024, self.n_bbox * (5 + self.n_class), kernel_size=1, padding=0, bias=False)
 
-#     def forward(self):
-#         pass
+    def forward(self, x):
+        x1 = self.darknet1(x)
+        x2 = self.darknet2(x1)
+        x2 = self.conv1(x2)
+        x2 = self.conv2(x2)
+        x1 = self.conv3(x1)
+        x1 = self.reorg(x1)
+        x2 = torch.cat((x1, x2), dim=1)
+        x2 = self.conv4(x2)
+        x2 = self.conv5(x2)
+
+        return x2
 
 
 if __name__ == "__main__":
-    darknet19 = Pretrain_model(device="cuda:2")
-    darknet19.run()
+    # darknet19 = Pretrain_model(device="cuda:2")
+    # darknet19.run()
+    yolov2 = Yolov2()

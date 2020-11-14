@@ -1,5 +1,6 @@
 PASCAL_VOC_2012
 ImageNet
+*.pth
 *.tmp
 *.tar
 *.gz
