@@ -207,25 +207,17 @@ class Pretrain_model:
                             if k == 10:
                                 break
 
-                    # loss = np.array(Loss).mean()
-                    # val_loss = np.array(Val_Loss).mean()
-                    # train_precision = np.array(Train_Precision).mean()
-                    # val_precision = np.array(Val_Precision).mean()
-
-                    loss = torch.stack(Loss, dim=0).cpu().detach().numpy().mean()
-                    val_loss = torch.stack(Val_Loss, dim=0).cpu().detach().numpy().mean()
-                    train_precision = torch.stack(Train_Precision, dim=0).cpu().detach().numpy().mean()
-                    val_precision = torch.stack(Val_Precision, dim=0).cpu().detach().numpy().mean()
+                    loss = np.array(Loss).mean()
+                    val_loss = np.array(Val_Loss).mean()
+                    train_precision = np.array(Train_Precision).mean()
+                    val_precision = np.array(Val_Precision).mean()
 
                     print(
                         "Epoch: {}/{} | Step: {} | Loss: {:.5f} | Val_Loss: {:.5f} | Train_Precision: {:.4f} | Val_Precision: {:.4f}".format(
                             epoch + 1, self.epoch, step, loss, val_loss, train_precision, val_precision,
                         )
                     )
-                    utils.tensorboard(
-                        self.log_path, (loss, val_loss, train_precision, val_precision), step,
-                    )
-
+            
                     Loss, Val_Loss, Train_Precision, Val_Precision = [], [], [], []
 
             save_path = "./dataset/Darknet19/epoch_{0}.pth".format(epoch + 1)
