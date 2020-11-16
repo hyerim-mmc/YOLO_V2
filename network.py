@@ -62,28 +62,28 @@ class Darknet19(nn.Module):
     def forward(self, x):
         # block1
         x1 = self.conv1(x)
-        x2 = self.maxpool(x1)
         # block2
+        x2 = self.maxpool(x1)
         x3 = self.conv2(x2)
-        x4 = self.maxpool(x3)
         # block3
+        x4 = self.maxpool(x3)
         x5 = self.conv3(x4)
         x6 = self.conv4(x5)
         x7 = self.conv5(x6)
-        x8 = self.maxpool(x7)
         # block4
+        x8 = self.maxpool(x7)
         x9 = self.conv6(x8)
         x10 = self.conv7(x9)
         x11 = self.conv8(x10)
-        x12 = self.maxpool(x11)
         # block5
+        x12 = self.maxpool(x11)
         x13 = self.conv9(x12)
         x14 = self.conv10(x13)
         x15 = self.conv11(x14)
         x16 = self.conv12(x15)
         x17 = self.conv13(x16)
-        x18 = self.maxpool(x17)
         # block6
+        x18 = self.maxpool(x17)
         x19 = self.conv14(x18)
         x20 = self.conv15(x19)
         x21 = self.conv16(x20)
@@ -244,12 +244,35 @@ class Yolov2(nn.Module):
         self.device = torch.device(device)
         self.n_bbox = n_bbox
         self.n_class = n_class
-        darknet19 = Darknet19()
 
         if pretrained:
+            darknet19 = Darknet19()
             print("Load pretrained Darknet19 model...")
-            darknet19.load_state_dict(torch.load("/dataset/Darknet19/Darknet19.pth"), map_location=self.device)
-        # pth parsing
+            darknet19.load_state_dict(torch.load("./dataset/Darknet19/Darknet19.pth", map_location=self.device))
+
+            # state_dict parsing
+            block = []
+            temp = []
+            pretrain = []
+            k = 0
+            for layer in darknet19.children():
+                if k == 0:
+                    maxpool = layer
+                else:
+                    temp = []
+                    temp.append(layer)
+                    block = nn.Sequential(*list(temp))
+                    pretrain.append(block)
+                k += 1
+
+            k = [1, 3, 7, 11, 17]
+            for idx in k:
+                pretrain.insert(idx, maxpool)
+        else:
+            print("There is no pretrained model!")
+
+        self.pretrain1 = nn.Sequential(*list(pretrain)[:17]).to(self.device)
+        self.pretrain2 = nn.Sequential(*list(pretrain)[17:-2]).to(self.device)
 
         self.conv1 = conv_net(1024, 1024)
         self.conv2 = conv_net(1024, 1024)
@@ -259,8 +282,8 @@ class Yolov2(nn.Module):
         self.conv5 = nn.Conv2d(1024, self.n_bbox * (5 + self.n_class), kernel_size=1, padding=0, bias=False)
 
     def forward(self, x):
-        x1 = self.darknet1(x)
-        x2 = self.darknet2(x1)
+        x1 = self.pretrain1(x)
+        x2 = self.pretrain2(x1)
         x2 = self.conv1(x2)
         x2 = self.conv2(x2)
         x1 = self.conv3(x1)
@@ -268,11 +291,10 @@ class Yolov2(nn.Module):
         x2 = torch.cat((x1, x2), dim=1)
         x2 = self.conv4(x2)
         x2 = self.conv5(x2)
-
         return x2
 
 
 if __name__ == "__main__":
     # darknet19 = Pretrain_model(device="cuda:2")
     # darknet19.run()
-    yolov2 = Yolov2()
+    yolov2 = Yolov2(pretrained=True)

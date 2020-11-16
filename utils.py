@@ -12,18 +12,6 @@ def load_pth(pth_path="./dataset/Darknet19/Darknet19.pth", save_path="darknet19.
     pth = torch.load(pth_path, map_location="cpu")
     print(pth)
 
-    # [pth file format]
-    # 'conv#.0.weight'
-    # 'conv#.1.weight', 'conv#.1.bias',
-    # 'conv#.1.running_mean', 'conv#.1.running_var',
-    # 'conv#.1.num_batches_tracked'
-
-
-def load_npy(path):
-    file = np.load(path)
-    print("%s : " % path)
-    print(file)
-
 
 def tensorboard(log_path, results, step):
     writer = SummaryWriter(log_path)
@@ -61,12 +49,11 @@ def show_image(data):
     image.show()
 
 
-def calc_IOU(self, box):
-    w_min = np.minimum(box[0], self.centroid[:, 0])
-    h_min = np.minimum(box[1], self.centroid[:, 1])
+def calc_IOU(self, pred, truth):
+    w_min = np.minimum(pred[0], truth[0])
+    h_min = np.minimum(pred[1], truth[1])
 
     overlap = w_min * h_min
-    iou = overlap / (box[0] * box[1] + self.centroid[:, 0] * self.centroid[:, 1] - overlap)
-    idx = np.argmax(iou)
+    iou = overlap / (pred[0] * pred[1] + truth[0] * truth[1] - overlap)
 
-    return idx
+    return iou
