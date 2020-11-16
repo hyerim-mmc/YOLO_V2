@@ -415,4 +415,9 @@ if __name__ == "__main__":
 
     # anchor = Anchor_Box()
     # anchor.gen_anchor()
+<<<<<<< HEAD
     utils.load_npy("./dataset/anchor.npy")
+=======
+    # utils.load_npy("./dataset/anchor.npy")
+    pass
+>>>>>>> 5868ba0e512e276c8d258b128845aae8137f9e45

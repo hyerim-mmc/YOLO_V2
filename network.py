@@ -122,7 +122,6 @@ class Pretrain_model:
         self.train_dataset = DataLoader(ImageNetDataset(), batch_size=self.mini_batch_size, shuffle=True, num_workers=8)
         self.val_dataset = DataLoader(ImageNetDataset(val_mode=True), batch_size=1, shuffle=True, num_workers=8)
         self.model = Darknet19().to(self.device)
-        self.log_path = "./dataset/tensorboard/"
 
         param = {}
         param["name"] = "sgd"
@@ -145,10 +144,7 @@ class Pretrain_model:
         print_size = 100
         for epoch in range(self.epoch):
             divi = 0
-            Loss = []
-            Val_Loss = []
-            Train_Precision = []
-            Val_Precision = []
+            Loss, Val_Loss, Train_Precision, Val_Precision = [], [], [], []
 
             for data in self.train_dataset:
                 # train mode
@@ -220,16 +216,8 @@ class Pretrain_model:
                             epoch + 1, self.epoch, step, loss, val_loss, train_precision, val_precision,
                         )
                     )
-                    # utils.tensorboard(
-                    #     self.log_path,
-                    #     (loss.tolist()[0], val_loss.tolist()[0], train_precision.tolist()[0], val_precision.tolist()[0]),
-                    #     step,
-                    # )
 
-                    Loss = []
-                    Val_Loss = []
-                    Train_Precision = []
-                    Val_Precision = []
+                    Loss, Val_Loss, Train_Precision, Val_Precision = [], [], [], []
 
             save_path = "./dataset/Darknet19/epoch_{0}.pth".format(epoch + 1)
             torch.save(self.model.state_dict(), save_path)
@@ -239,7 +227,7 @@ class Pretrain_model:
 
 
 class Yolov2(nn.Module):
-    def __init__(self, n_bbox=5, n_class=20, device="cpu", pretrained=None):
+    def __init__(self, n_bbox=5, n_class=20, device="cpu", pretrained=True):
         super().__init__()
         self.device = torch.device(device)
         self.n_bbox = n_bbox
@@ -286,9 +274,9 @@ class Yolov2(nn.Module):
         x2 = self.pretrain2(x1)
         x2 = self.conv1(x2)
         x2 = self.conv2(x2)
-        x1 = self.conv3(x1)
-        x1 = self.reorg(x1)
-        x2 = torch.cat((x1, x2), dim=1)
+        pass_through = self.conv3(x1)
+        pass_through = self.reorg(pass_through)
+        x2 = torch.cat((pass_through, x2), dim=1)
         x2 = self.conv4(x2)
         x2 = self.conv5(x2)
         return x2
