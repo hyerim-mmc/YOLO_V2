@@ -1,6 +1,7 @@
 import os
 import random
 import torch
+import utils
 import numpy as np
 import xml.etree.ElementTree as Et
 import torch.utils.data.dataset
@@ -408,9 +409,9 @@ if __name__ == "__main__":
     #     print("#%d image" % idx)
     #     show_image(VOC.__getitem__(idx))
 
-    ImageNet = ImageNetDataset(val_mode=True)
-    for idx in range(ImageNet.__len__()):
-        print(ImageNet.__getitem__(idx))
+    # ImageNet = ImageNetDataset(val_mode=True)
+    # for idx in range(ImageNet.__len__()):
+    #     print(ImageNet.__getitem__(idx))
 
     # anchor = Anchor_Box()
     # anchor.gen_anchor()
