@@ -122,7 +122,6 @@ class Pretrain_model:
         self.train_dataset = DataLoader(ImageNetDataset(), batch_size=self.mini_batch_size, shuffle=True, num_workers=8)
         self.val_dataset = DataLoader(ImageNetDataset(val_mode=True), batch_size=1, shuffle=True, num_workers=8)
         self.model = Darknet19().to(self.device)
-        self.log_path = "./dataset/tensorboard/"
 
         param = {}
         param["name"] = "sgd"
@@ -217,7 +216,7 @@ class Pretrain_model:
                             epoch + 1, self.epoch, step, loss, val_loss, train_precision, val_precision,
                         )
                     )
-            
+
                     Loss, Val_Loss, Train_Precision, Val_Precision = [], [], [], []
 
             save_path = "./dataset/Darknet19/epoch_{0}.pth".format(epoch + 1)
@@ -262,6 +261,6 @@ class Yolov2(nn.Module):
 
 
 if __name__ == "__main__":
-    darknet19 = Pretrain_model(device="cuda:2")
-    darknet19.run()
-    # yolov2 = Yolov2()
+    # darknet19 = Pretrain_model(device="cuda:2")
+    # darknet19.run()
+    yolov2 = Yolov2()
