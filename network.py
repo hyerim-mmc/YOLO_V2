@@ -212,10 +212,10 @@ class Pretrain_model:
                     # train_precision = np.array(Train_Precision).mean()
                     # val_precision = np.array(Val_Precision).mean()
 
-                    loss = Loss.detach().numpy().mean()
-                    val_loss = Val_Loss.detach().numpy().mean()
-                    train_precision = Train_Precision.detach().numpy().mean()
-                    val_precision = Val_Precision.detach().numpy().mean()
+                    loss = torch.stack(Loss, dim=0).cpu().detach().numpy().mean()
+                    val_loss = torch.stack(Val_Loss, dim=0).cpu().detach().numpy().mean()
+                    train_precision = torch.stack(Train_Precision, dim=0).cpu().detach().numpy().mean()
+                    val_precision = torch.stack(Val_Precision, dim=0).cpu().detach().numpy().mean()
 
                     print(
                         "Epoch: {}/{} | Step: {} | Loss: {:.5f} | Val_Loss: {:.5f} | Train_Precision: {:.4f} | Val_Precision: {:.4f}".format(
