@@ -1,18 +1,12 @@
 import torch
-<<<<<<< HEAD
 import utils
 import loss
-=======
 import torch.nn as nn
->>>>>>> 5868ba0e512e276c8d258b128845aae8137f9e45
 import numpy as np
 import network
 import utils
 
-<<<<<<< HEAD
 from network import Yolov2
-=======
->>>>>>> 5868ba0e512e276c8d258b128845aae8137f9e45
 from dataset import VOCDataset
 from torch.utils.data import DataLoader
 
@@ -21,11 +15,8 @@ class Yolov2_train:
     def __init__(
         self,
         batch_size=64,
-<<<<<<< HEAD
-        epoch=160,
-=======
+#         epoch=160,
         epoch=10,
->>>>>>> 5868ba0e512e276c8d258b128845aae8137f9e45
         lr=0.1,
         device="cpu",
         weight_decay=0.0005,
@@ -42,8 +33,7 @@ class Yolov2_train:
         self.momentum = momentum
         self.division = division
         self.burn_in = burn_in
-<<<<<<< HEAD
-=======
+
 
         self.train_dataset = DataLoader(VOCDataset(), batch_size=self.mini_batch_size, shuffle=True, num_workers=8)
         self.val_dataset = DataLoader(
@@ -59,8 +49,6 @@ class Yolov2_train:
         param["momentum"] = momentum
 
         self.optimizer = utils.get_optim(param, self.model)
->>>>>>> 5868ba0e512e276c8d258b128845aae8137f9e45
-
         self.train_dataset = DataLoader(VOCDataset(), batch_size=self.mini_batch_size, shuffle=True)
         self.val_dataset = DataLoader(VOCDataset(train_mode=False), batch_size=self.mini_batch_size, shuffle=True)
         self.model = Yolov2(pretrained=True).to(self.device)
