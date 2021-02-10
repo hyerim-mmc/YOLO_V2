@@ -78,5 +78,5 @@ def load_ImageNet():
 
 
 if __name__ == "__main__":
-    # load_PASCAL_VOC2012()
-    load_ImageNet()
+    load_PASCAL_VOC2012()
+    # load_ImageNet()
